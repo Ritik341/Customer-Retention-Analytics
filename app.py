@@ -191,33 +191,33 @@ def retention_rate_for(data):
     return (1 - data["Exited"].mean()) * 100
 
 
-active = filtered[filtered["IsActiveMember"] == 1]
-inactive = filtered[filtered["IsActiveMember"] == 0]
+# Calculate all five KPIs using the complete dataset
+active = df[df["IsActiveMember"] == 1]
+inactive = df[df["IsActiveMember"] == 0]
 
 active_retention = retention_rate_for(active)
 inactive_retention = retention_rate_for(inactive)
 
 engagement_ratio = (
     active_retention / inactive_retention
-    if inactive_retention else 0
+    if inactive_retention > 0 else None
 )
 
-single = filtered[filtered["NumOfProducts"] == 1]
-multiple = filtered[filtered["NumOfProducts"] > 1]
+# Product Depth Index
+single = df[df["NumOfProducts"] == 1]
+multiple = df[df["NumOfProducts"] > 1]
 
 single_retention = retention_rate_for(single)
 multiple_retention = retention_rate_for(multiple)
 
 product_depth = (
     multiple_retention / single_retention
-    if single_retention else 0
+    if single_retention > 0 else None
 )
 
+# High-Balance Disengagement Rate
 median_balance = df["Balance"].median()
-
-high_balance = filtered[
-    filtered["Balance"] >= median_balance
-]
+high_balance = df[df["Balance"] >= median_balance]
 
 inactive_high_balance = high_balance[
     high_balance["IsActiveMember"] == 0
@@ -225,29 +225,31 @@ inactive_high_balance = high_balance[
 
 high_balance_disengagement = (
     len(inactive_high_balance) / len(high_balance) * 100
-    if len(high_balance) else 0
+    if len(high_balance) > 0 else None
 )
 
-card_holders = filtered[filtered["HasCrCard"] == 1]
-non_card_holders = filtered[filtered["HasCrCard"] == 0]
+# Credit Card Stickiness
+card_holders = df[df["HasCrCard"] == 1]
+non_card_holders = df[df["HasCrCard"] == 0]
 
 card_retention = retention_rate_for(card_holders)
 non_card_retention = retention_rate_for(non_card_holders)
 
 card_stickiness = (
     card_retention / non_card_retention
-    if non_card_retention else 0
+    if non_card_retention > 0 else None
 )
 
-weak = filtered[filtered["Relationship Tier"] == "Weak"]
-strong = filtered[filtered["Relationship Tier"] == "Strong"]
+# Relationship Strength Index
+weak = df[df["Relationship Tier"] == "Weak"]
+strong = df[df["Relationship Tier"] == "Strong"]
 
 weak_retention = retention_rate_for(weak)
 strong_retention = retention_rate_for(strong)
 
 relationship_index = (
     strong_retention / weak_retention
-    if weak_retention else 0
+    if weak_retention > 0 else None
 )
 
 k1, k2, k3, k4, k5 = st.columns(5)
